@@ -1,12 +1,14 @@
 <template>
   <div class="container mt-3 mt-sm-5" id="app">
     <div class="row">
-      <div class="col-md-9">
+      <div class="col-md-8">
         <div class="map" id="map"></div>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-4">
         <label>Encoded Polyline</label>
         <textarea v-model="encodedPolyline" placeholder="paste polyline"></textarea>
+        <label>Decoded Polyline</label>
+        <textarea v-model="jsonCoordinates"></textarea>
       </div>
     </div>
   </div>
@@ -26,15 +28,20 @@ export default {
       map: null,
       tileLayer: null,
       encodedPolyline: "",
+      jsonCoordinates: "[]",
+      coordinates: [],
       polyline: null
     };
   },
-  computed: {
-    coordinates: function () {
-      return polyline.decode(this.encodedPolyline);
-    }
-  },
   watch: {
+    encodedPolyline: function (val) {
+      this.coordinates = polyline.decode(val);
+    },
+    jsonCoordinates: function (val) {
+      this.coordinates = JSON.parse(val).map(function (latLng) {
+        return [latLng.lat, latLng.lng];
+      });
+    },
     coordinates: function (val) {
       if (this.polyline == null) {
         this.polyline = L.polyline(val).addTo(this.map);
@@ -42,6 +49,10 @@ export default {
         this.polyline.setLatLngs(val);
       }
       this.map.fitBounds(this.polyline.getBounds());
+      this.encodedPolyline = polyline.encode(this.coordinates);
+      this.jsonCoordinates = JSON.stringify(this.coordinates.map(function (coord) {
+        return {lat: coord[0], lng: coord[1]};
+      }), null, 4);
     }
   },
   mounted() {
