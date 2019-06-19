@@ -4,15 +4,20 @@
       <div class="col-md-9">
         <div class="map" id="map"></div>
       </div>
+      <div class="col-md-3">
+        <label>Encoded Polyline</label>
+        <textarea v-model="encodedPolyline" placeholder="paste polyline"></textarea>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import L from 'leaflet'
-import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
-import 'leaflet/dist/leaflet.css'
+import L from "leaflet";
+import "bootstrap/dist/css/bootstrap.css";
+import "bootstrap-vue/dist/bootstrap-vue.css";
+import "leaflet/dist/leaflet.css";
+var polyline = require('@mapbox/polyline');
 
 export default {
   name: "app",
@@ -20,8 +25,24 @@ export default {
     return {
       map: null,
       tileLayer: null,
-      layers: []
+      encodedPolyline: "",
+      polyline: null
     };
+  },
+  computed: {
+    coordinates: function () {
+      return polyline.decode(this.encodedPolyline);
+    }
+  },
+  watch: {
+    coordinates: function (val) {
+      if (this.polyline == null) {
+        this.polyline = L.polyline(val).addTo(this.map);
+      } else {
+        this.polyline.setLatLngs(val);
+      }
+      this.map.fitBounds(this.polyline.getBounds());
+    }
   },
   mounted() {
     this.initMap();
@@ -37,7 +58,6 @@ export default {
             '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
         }
       );
-
       this.tileLayer.addTo(this.map);
     }
   }
@@ -53,5 +73,7 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
-.map { height: 600px }
+.map {
+  height: 600px;
+}
 </style>
