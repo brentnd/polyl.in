@@ -5,10 +5,43 @@
         <div class="map" id="map"></div>
       </div>
       <div class="col-md-4">
-        <label>Encoded Polyline</label>
-        <textarea v-model="encodedPolyline" placeholder="paste polyline"></textarea>
-        <label>Decoded Polyline</label>
-        <textarea v-model="jsonCoordinates"></textarea>
+        <div class="form-group">
+          <label>Encoded Polyline</label>
+          <textarea class="form-control" v-model="encodedPolyline" placeholder="oqr~FtmzuOJxjAiN~B"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Decoded Coordinates</label>
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Latitude</th>
+                <th scope="col">Longitude</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(coordinate, index) in coordinates" v-bind:key="index">
+                <th scope="row">{{ index + 1 }}</th>
+                <td>
+                  <input
+                    class="form-control input-lg"
+                    type="number"
+                    step="any"
+                    v-model="coordinate[0]"
+                  >
+                </td>
+                <td>
+                  <input
+                    class="form-control input-lg"
+                    type="number"
+                    step="any"
+                    v-model="coordinate[1]"
+                  >
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -19,7 +52,7 @@ import L from "leaflet";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import "leaflet/dist/leaflet.css";
-var polyline = require('@mapbox/polyline');
+var polyline = require("@mapbox/polyline");
 
 export default {
   name: "app",
@@ -28,21 +61,15 @@ export default {
       map: null,
       tileLayer: null,
       encodedPolyline: "",
-      jsonCoordinates: "[]",
       coordinates: [],
       polyline: null
     };
   },
   watch: {
-    encodedPolyline: function (val) {
+    encodedPolyline: function(val) {
       this.coordinates = polyline.decode(val);
     },
-    jsonCoordinates: function (val) {
-      this.coordinates = JSON.parse(val).map(function (latLng) {
-        return [latLng.lat, latLng.lng];
-      });
-    },
-    coordinates: function (val) {
+    coordinates: function(val) {
       if (this.polyline == null) {
         this.polyline = L.polyline(val).addTo(this.map);
       } else {
@@ -50,9 +77,6 @@ export default {
       }
       this.map.fitBounds(this.polyline.getBounds());
       this.encodedPolyline = polyline.encode(this.coordinates);
-      this.jsonCoordinates = JSON.stringify(this.coordinates.map(function (coord) {
-        return {lat: coord[0], lng: coord[1]};
-      }), null, 4);
     }
   },
   mounted() {
@@ -76,7 +100,8 @@ export default {
 </script>
 
 <style>
-html,body {
+html,
+body {
   height: 100%;
 }
 #app {
