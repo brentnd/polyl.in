@@ -8,6 +8,7 @@
         <div class="form-group">
           <label>Encoded Polyline</label>
           <textarea class="form-control" v-model="encodedPolyline" placeholder="oqr~FtmzuOJxjAiN~B"></textarea>
+          <a href="#" v-on:click="coordinates = []" v-show="coordinates.length > 0">Clear</a>
         </div>
         <div class="form-group">
           <label>Decoded Coordinates</label>
@@ -70,13 +71,19 @@ export default {
       this.coordinates = polyline.decode(val);
     },
     coordinates: function(val) {
-      if (this.polyline == null) {
-        this.polyline = L.polyline(val).addTo(this.map);
+      if (val.length > 0) {
+        if (this.polyline == null) {
+          this.polyline = L.polyline(val).addTo(this.map);
+        } else {
+          this.polyline.setLatLngs(val);
+        }
+        this.map.fitBounds(this.polyline.getBounds());
+        this.encodedPolyline = polyline.encode(this.coordinates);
       } else {
-        this.polyline.setLatLngs(val);
+        this.defaultMap();
+        this.polyline = null;
+        this.encodedPolyline = "";
       }
-      this.map.fitBounds(this.polyline.getBounds());
-      this.encodedPolyline = polyline.encode(this.coordinates);
     }
   },
   mounted() {
@@ -84,7 +91,8 @@ export default {
   },
   methods: {
     initMap() {
-      this.map = L.map("map").setView([40.1304, -75.5149], 12);
+      this.map = L.map("map");
+      this.defaultMap();
       this.tileLayer = L.tileLayer(
         "https://cartodb-basemaps-{s}.global.ssl.fastly.net/rastertiles/voyager/{z}/{x}/{y}.png",
         {
@@ -94,6 +102,9 @@ export default {
         }
       );
       this.tileLayer.addTo(this.map);
+    },
+    defaultMap() {
+      this.map.setView([40.1304, -75.5149], 12);
     }
   }
 };
