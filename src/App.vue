@@ -1,6 +1,6 @@
 <template>
-  <div class="container mt-3 mt-sm-5" id="app">
-    <div class="row">
+  <div class="container-fluid h-100" id="app">
+    <div class="row h-100">
       <div class="col-md-8">
         <div class="map" id="map"></div>
       </div>
@@ -76,15 +76,18 @@ export default {
 </script>
 
 <style>
+html,body {
+  height: 100%;
+}
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  height: 100%;
 }
 .map {
-  height: 600px;
+  height: 100%;
 }
 </style>
