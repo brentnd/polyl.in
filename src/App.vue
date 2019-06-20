@@ -57,7 +57,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(element, index) in coordinatesWithDistances" v-bind:key="index">
+              <tr
+                v-for="(element, index) in coordinatesWithDistances"
+                v-bind:key="index"
+                @mouseover="hoverIndex = index"
+                @mouseleave="hoverIndex = null"
+              >
                 <th scope="row">{{ index + 1 }}</th>
                 <td>{{ element.dist }} {{ units.short }}</td>
                 <td>
@@ -115,6 +120,8 @@ export default {
       ],
       coordinates: [],
       polyline: null,
+      hoverIndex: null,
+      marker: null,
       units: {
         short: "m",
         full: "meters"
@@ -156,11 +163,24 @@ export default {
         this.encodedPolyline = polyline.encode(this.coordinates);
       } else {
         this.defaultMap();
-        if (this.polyline != null) {
+        if (this.polyline !== null) {
           this.map.removeLayer(this.polyline);
           this.polyline = null;
         }
         this.encodedPolyline = "";
+      }
+    },
+    hoverIndex: function(index) {
+      if (this.marker !== null) {
+        this.map.removeLayer(this.marker);
+      }
+      if (index !== null) {
+        this.marker = L.circle(this.coordinates[index], {
+          color: "#222",
+          fillColor: "#666",
+          fillOpacity: 0.2,
+          radius: 8
+        }).addTo(this.map);
       }
     }
   },
