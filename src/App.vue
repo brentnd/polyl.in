@@ -1,10 +1,10 @@
 <template>
   <div class="container-fluid h-100" id="app">
     <div class="row h-100">
-      <div class="col-md-8">
+      <div class="col-md-7">
         <div class="map" id="map"></div>
       </div>
-      <div class="col-md-4 sidepanel">
+      <div class="col-md-5 sidepanel">
         <div class="form-group">
           <label>Encoded Polyline</label>
           <textarea class="form-control" v-model="encodedPolyline" placeholder="oqr~FtmzuOJxjAiN~B"></textarea>
@@ -32,7 +32,7 @@
               <div class="input-group">
                 <div class="form-control">{{ computeDistance() }}</div>
                 <div class="input-group-append">
-                  <div class="input-group-text">meters</div>
+                  <div class="input-group-text">{{ units.short }}</div>
                 </div>
               </div>
             </div>
@@ -50,19 +50,21 @@
             <thead>
               <tr>
                 <th scope="col">#</th>
+                <th scope="col">Distance</th>
                 <th scope="col">Latitude</th>
                 <th scope="col">Longitude</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(coordinate, index) in coordinates" v-bind:key="index">
+              <tr v-for="(element, index) in coordinatesWithDistances" v-bind:key="index">
                 <th scope="row">{{ index + 1 }}</th>
+                <td>{{ element.dist }} {{ units.short }}</td>
                 <td>
                   <input
                     class="form-control input-lg"
                     type="number"
                     step="any"
-                    v-model="coordinate[0]"
+                    v-model="element.lat"
                   >
                 </td>
                 <td>
@@ -70,7 +72,7 @@
                     class="form-control input-lg"
                     type="number"
                     step="any"
-                    v-model="coordinate[1]"
+                    v-model="element.lng"
                   >
                 </td>
               </tr>
@@ -106,8 +108,26 @@ export default {
         }
       ],
       coordinates: [],
-      polyline: null
+      polyline: null,
+      units: {
+        short: "m",
+        full: "meters"
+      }
     };
+  },
+  computed: {
+    coordinatesWithDistances: function() {
+      let distAcc = 0.0;
+      let lastCoords = this.coordinates[0];
+      let self = this;
+      return this.coordinates.map(function(coords) {
+        distAcc += turf.distance(lastCoords, coords, {
+          units: self.units.full
+        });
+        lastCoords = coords;
+        return { lat: coords[0], lng: coords[1], dist: distAcc.toFixed(1) };
+      });
+    }
   },
   watch: {
     encodedPolyline: function(val) {
@@ -155,7 +175,7 @@ export default {
     computeDistance() {
       if (this.coordinates.length > 1) {
         var line = turf.lineString(this.coordinates);
-        return turf.length(line, { units: "meters" }).toFixed(2);
+        return turf.length(line, { units: this.units.full }).toFixed(2);
       }
     }
   }
