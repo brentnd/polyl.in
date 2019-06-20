@@ -17,12 +17,35 @@
           <div class="small" v-show="coordinates.length == 0">
             Samples:
             <template v-for="(example, index) in examplePolylines">
-              <a href="#" v-bind:key="index" v-on:click="encodedPolyline = example.polyline">{{ example.name }}</a>&nbsp;
+              <a
+                href="#"
+                v-bind:key="index"
+                v-on:click="encodedPolyline = example.polyline"
+              >{{ example.name }}</a>&nbsp;
             </template>
           </div>
         </div>
+        <div class="row">
+          <div class="col">
+            <div class="form-group" v-show="coordinates.length > 2">
+              <label>Distance</label>
+              <div class="input-group">
+                <div class="form-control">{{ computeDistance() }}</div>
+                <div class="input-group-append">
+                  <div class="input-group-text">meters</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-group" v-show="coordinates.length > 2">
+              <label>Points #</label>
+              <div class="form-control">{{ coordinates.length }}</div>
+            </div>
+          </div>
+        </div>
         <div class="form-group">
-          <label>Decoded Coordinates</label>
+          <label>Coordinates</label>
           <table class="table">
             <thead>
               <tr>
@@ -65,6 +88,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import "leaflet/dist/leaflet.css";
 var polyline = require("@mapbox/polyline");
+import * as turf from "@turf/turf";
 
 export default {
   name: "app",
@@ -124,6 +148,12 @@ export default {
     },
     defaultMap() {
       this.map.setView([40.1304, -75.5149], 12);
+    },
+    computeDistance() {
+      if (this.coordinates.length > 1) {
+        var line = turf.lineString(this.coordinates);
+        return turf.length(line, { units: "meters" }).toFixed(2);
+      }
     }
   }
 };
