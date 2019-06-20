@@ -4,7 +4,7 @@
       <div class="col-md-7">
         <div class="map" id="map"></div>
       </div>
-      <div class="col-md-5 sidepanel">
+      <div class="col-md-5 scrollable sidepanel">
         <div class="form-group">
           <label>Encoded Polyline</label>
           <textarea class="form-control" v-model="encodedPolyline" placeholder="oqr~FtmzuOJxjAiN~B"></textarea>
@@ -46,49 +46,52 @@
         </div>
         <div class="form-group">
           <label>Coordinates</label>
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Distance</th>
-                <th scope="col">Latitude</th>
-                <th scope="col">Longitude</th>
-                <th scope="col"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(element, index) in coordinatesWithDistances"
-                v-bind:key="index"
-                @mouseover="hoverIndex = index"
-                @mouseleave="hoverIndex = null"
-              >
-                <th scope="row">{{ index + 1 }}</th>
-                <td>{{ element.dist }} {{ units.short }}</td>
-                <td>
-                  <input
-                    class="form-control input-lg"
-                    type="number"
-                    step="any"
-                    v-model="element.lat"
-                  >
-                </td>
-                <td>
-                  <input
-                    class="form-control input-lg"
-                    type="number"
-                    step="any"
-                    v-model="element.lng"
-                  >
-                </td>
-                <td>
-                  <button type="button" class="close" v-on:click="removeCoordinate(index)">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="scrollable coordinates">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Distance</th>
+                  <th scope="col">Latitude</th>
+                  <th scope="col">Longitude</th>
+                  <th scope="col"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(element, index) in coordinatesWithDistances"
+                  v-bind:key="index"
+                  @mouseover="hoverIndex = index"
+                  @mouseleave="hoverIndex = null"
+                  v-on:click="clickIndex(index)"
+                >
+                  <th scope="row">{{ index + 1 }}</th>
+                  <td>{{ element.dist }} {{ units.short }}</td>
+                  <td>
+                    <input
+                      class="form-control input-lg"
+                      type="number"
+                      step="any"
+                      v-model="element.lat"
+                    >
+                  </td>
+                  <td>
+                    <input
+                      class="form-control input-lg"
+                      type="number"
+                      step="any"
+                      v-model="element.lng"
+                    >
+                  </td>
+                  <td>
+                    <button type="button" class="close" v-on:click="removeCoordinate(index)">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -216,6 +219,11 @@ export default {
     },
     onMapClick(e) {
       this.coordinates.push([e.latlng.lat, e.latlng.lng]);
+    },
+    clickIndex: function(index) {
+      if (index !== null) {
+        this.map.setView(this.coordinates[index], 14);
+      }
     }
   }
 };
@@ -239,6 +247,11 @@ body {
 }
 .sidepanel {
   height: 100%;
-  overflow-y: scroll;
+}
+.scrollable {
+  overflow-y: auto;
+}
+.coordinates {
+  max-height: 500px;
 }
 </style>
