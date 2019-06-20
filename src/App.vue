@@ -53,11 +53,14 @@
                 <th scope="col">Distance</th>
                 <th scope="col">Latitude</th>
                 <th scope="col">Longitude</th>
+                <th scope="col"></th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(element, index) in coordinatesWithDistances" v-bind:key="index">
-                <th scope="row">{{ index + 1 }}</th>
+                <th scope="row">
+                  {{ index + 1 }}
+                </th>
                 <td>{{ element.dist }} {{ units.short }}</td>
                 <td>
                   <input
@@ -74,6 +77,11 @@
                     step="any"
                     v-model="element.lng"
                   >
+                </td>
+                <td>
+                  <button type="button" class="close" v-on:click="removeCoordinate(index)">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -177,6 +185,9 @@ export default {
         var line = turf.lineString(this.coordinates);
         return turf.length(line, { units: this.units.full }).toFixed(2);
       }
+    },
+    removeCoordinate(index) {
+      this.coordinates.splice(index, 1);
     }
   }
 };
