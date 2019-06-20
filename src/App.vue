@@ -124,7 +124,10 @@ export default {
         this.encodedPolyline = polyline.encode(this.coordinates);
       } else {
         this.defaultMap();
-        this.polyline = null;
+        if (this.polyline != null) {
+          this.map.removeLayer(this.polyline);
+          this.polyline = null;
+        }
         this.encodedPolyline = "";
       }
     }
