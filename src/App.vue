@@ -58,9 +58,7 @@
             </thead>
             <tbody>
               <tr v-for="(element, index) in coordinatesWithDistances" v-bind:key="index">
-                <th scope="row">
-                  {{ index + 1 }}
-                </th>
+                <th scope="row">{{ index + 1 }}</th>
                 <td>{{ element.dist }} {{ units.short }}</td>
                 <td>
                   <input
@@ -148,7 +146,13 @@ export default {
         } else {
           this.polyline.setLatLngs(val);
         }
-        this.map.fitBounds(this.polyline.getBounds());
+        if (
+          !this.map
+            .getBounds()
+            .contains(this.coordinates[this.coordinates.length - 1])
+        ) {
+          this.map.fitBounds(this.polyline.getBounds());
+        }
         this.encodedPolyline = polyline.encode(this.coordinates);
       } else {
         this.defaultMap();
@@ -176,6 +180,7 @@ export default {
         }
       );
       this.tileLayer.addTo(this.map);
+      this.map.on("click", this.onMapClick);
     },
     defaultMap() {
       this.map.setView([40.1304, -75.5149], 12);
@@ -188,6 +193,9 @@ export default {
     },
     removeCoordinate(index) {
       this.coordinates.splice(index, 1);
+    },
+    onMapClick(e) {
+      this.coordinates.push([e.latlng.lat, e.latlng.lng]);
     }
   }
 };
