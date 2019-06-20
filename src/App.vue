@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid h-100" id="app">
     <div class="row h-100">
-      <div class="col-md-7">
+      <div class="col-md-7 flush-left">
         <div class="map" id="map"></div>
       </div>
       <div class="col-md-5 scrollable sidepanel">
@@ -253,5 +253,8 @@ body {
 }
 .coordinates {
   max-height: 500px;
+}
+.flush-left {
+  padding-left: 0px !important;
 }
 </style>
