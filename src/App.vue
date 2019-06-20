@@ -4,7 +4,7 @@
       <div class="col-md-8">
         <div class="map" id="map"></div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-4 sidepanel">
         <div class="form-group">
           <label>Encoded Polyline</label>
           <textarea class="form-control" v-model="encodedPolyline" placeholder="oqr~FtmzuOJxjAiN~B"></textarea>
@@ -174,5 +174,9 @@ body {
 }
 .map {
   height: 100%;
+}
+.sidepanel {
+  height: 100%;
+  overflow-y: scroll;
 }
 </style>
