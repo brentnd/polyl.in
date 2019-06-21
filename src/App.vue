@@ -30,7 +30,7 @@
             <div class="form-group" v-show="coordinates.length > 2">
               <label>Distance</label>
               <div class="input-group">
-                <div class="form-control">{{ computeDistance() }}</div>
+                <div class="form-control">{{ totalDistance }}</div>
                 <div class="input-group-append">
                   <div class="input-group-text">{{ units.short }}</div>
                 </div>
@@ -47,7 +47,7 @@
         <div class="form-group">
           <label>Coordinates</label>
           <div class="scrollable coordinates">
-            <table class="table">
+            <table class="table table-sm table-hover">
               <thead>
                 <tr>
                   <th scope="col">#</th>
@@ -61,9 +61,7 @@
                 <tr
                   v-for="(element, index) in coordinatesWithDistances"
                   v-bind:key="index"
-                  @mouseover="hoverIndex = index"
-                  @mouseleave="hoverIndex = null"
-                  v-on:click="clickIndex(index)"
+                  @mouseover="showMarkerAt(coordinates[index])"
                 >
                   <th scope="row">{{ index + 1 }}</th>
                   <td>{{ element.dist }} {{ units.short }}</td>
@@ -123,7 +121,6 @@ export default {
       ],
       coordinates: [],
       polyline: null,
-      hoverIndex: null,
       marker: null,
       units: {
         short: "m",
@@ -143,6 +140,14 @@ export default {
         lastCoords = coords;
         return { lat: coords[0], lng: coords[1], dist: distAcc.toFixed(1) };
       });
+    },
+    totalDistance: function() {
+      if (this.coordinates.length > 1) {
+        var line = turf.lineString(this.coordinates);
+        return turf.length(line, { units: this.units.full }).toFixed(2);
+      } else {
+        return 0.0;
+      }
     }
   },
   watch: {
@@ -150,7 +155,7 @@ export default {
       this.coordinates = polyline.decode(val);
     },
     coordinates: function(val) {
-      if (val.length > 0) {
+      if (val.length > 1) {
         if (this.polyline == null) {
           this.polyline = L.polyline(val).addTo(this.map);
         } else {
@@ -163,28 +168,19 @@ export default {
         ) {
           this.map.fitBounds(this.polyline.getBounds());
         }
-        this.encodedPolyline = polyline.encode(this.coordinates);
       } else {
-        this.defaultMap();
         if (this.polyline !== null) {
           this.map.removeLayer(this.polyline);
           this.polyline = null;
         }
-        this.encodedPolyline = "";
+        if (val.length == 0) {
+          this.hideMarker();
+          this.defaultMap();
+        } else {
+          this.showMarkerAt(val[0]);
+        }
       }
-    },
-    hoverIndex: function(index) {
-      if (this.marker !== null) {
-        this.map.removeLayer(this.marker);
-      }
-      if (index !== null) {
-        this.marker = L.circle(this.coordinates[index], {
-          color: "#222",
-          fillColor: "#666",
-          fillOpacity: 0.2,
-          radius: 8
-        }).addTo(this.map);
-      }
+      this.encodedPolyline = polyline.encode(this.coordinates);
     }
   },
   mounted() {
@@ -208,21 +204,30 @@ export default {
     defaultMap() {
       this.map.setView([40.1304, -75.5149], 12);
     },
-    computeDistance() {
-      if (this.coordinates.length > 1) {
-        var line = turf.lineString(this.coordinates);
-        return turf.length(line, { units: this.units.full }).toFixed(2);
-      }
-    },
     removeCoordinate(index) {
       this.coordinates.splice(index, 1);
+      this.hideMarker();
     },
     onMapClick(e) {
       this.coordinates.push([e.latlng.lat, e.latlng.lng]);
+      this.showMarkerAt(this.coordinates[this.coordinates.length - 1]);
     },
-    clickIndex: function(index) {
-      if (index !== null) {
-        this.map.setView(this.coordinates[index], 14);
+    hideMarker() {
+      if (this.marker !== null) {
+        this.map.removeLayer(this.marker);
+      }
+    },
+    showMarkerAt(latLng) {
+      this.hideMarker();
+      this.marker = L.circle(latLng, {
+        color: "#999",
+        fillColor: "#999",
+        fillOpacity: 0.2,
+        radius: 20
+      }).addTo(this.map);
+      console.log(this.map.getZoom());
+      if (this.map.getZoom() <= 14) {
+        this.map.setView(latLng, 16);
       }
     }
   }
