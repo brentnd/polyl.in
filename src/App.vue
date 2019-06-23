@@ -29,12 +29,7 @@
           <div class="col">
             <div class="form-group" v-show="coordinates.length > 2">
               <label>Distance</label>
-              <div class="input-group">
-                <div class="form-control">{{ totalDistance }}</div>
-                <div class="input-group-append">
-                  <div class="input-group-text">{{ units.short }}</div>
-                </div>
-              </div>
+              <distance-input v-model="currentDistance" v-bind:units="units.short"></distance-input>
             </div>
           </div>
           <div class="col">
@@ -51,7 +46,6 @@
               <thead>
                 <tr>
                   <th scope="col">#</th>
-                  <th scope="col">Distance</th>
                   <th scope="col">Latitude</th>
                   <th scope="col">Longitude</th>
                   <th scope="col"></th>
@@ -59,26 +53,20 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="(element, index) in coordinatesWithDistances"
+                  v-for="(coordinate, index) in coordinates"
                   v-bind:key="index"
-                  @mouseover="showMarkerAt(coordinates[index])"
+                  @mouseover="highlightIndex(index)"
                 >
                   <th scope="row">{{ index + 1 }}</th>
-                  <td>{{ element.dist }} {{ units.short }}</td>
                   <td>
-                    <input
-                      class="form-control input-lg"
-                      type="number"
-                      step="any"
-                      v-model="element.lat"
-                    >
+                    <input class="form-control" type="number" step="any" v-model="coordinate[0]">
                   </td>
                   <td>
                     <input
                       class="form-control input-lg"
                       type="number"
                       step="any"
-                      v-model="element.lng"
+                      v-model="coordinate[1]"
                     >
                   </td>
                   <td>
@@ -103,9 +91,11 @@ import "bootstrap-vue/dist/bootstrap-vue.css";
 import "leaflet/dist/leaflet.css";
 var polyline = require("@mapbox/polyline");
 import * as turf from "@turf/turf";
+import DistanceInput from "./components/DistanceInput";
 
 export default {
   name: "app",
+  components: { DistanceInput },
   data: function() {
     return {
       map: null,
@@ -120,6 +110,7 @@ export default {
         }
       ],
       coordinates: [],
+      currentDistance: 0.0,
       polyline: null,
       marker: null,
       units: {
@@ -127,28 +118,6 @@ export default {
         full: "meters"
       }
     };
-  },
-  computed: {
-    coordinatesWithDistances: function() {
-      let distAcc = 0.0;
-      let lastCoords = this.coordinates[0];
-      let self = this;
-      return this.coordinates.map(function(coords) {
-        distAcc += turf.distance(lastCoords, coords, {
-          units: self.units.full
-        });
-        lastCoords = coords;
-        return { lat: coords[0], lng: coords[1], dist: distAcc.toFixed(1) };
-      });
-    },
-    totalDistance: function() {
-      if (this.coordinates.length > 1) {
-        var line = turf.lineString(this.coordinates);
-        return turf.length(line, { units: this.units.full }).toFixed(2);
-      } else {
-        return 0.0;
-      }
-    }
   },
   watch: {
     encodedPolyline: function(val) {
@@ -181,6 +150,12 @@ export default {
         }
       }
       this.encodedPolyline = polyline.encode(this.coordinates);
+    },
+    currentDistance: function(val) {
+      let lineString = turf.lineString(this.coordinates);
+      let position = turf.along(lineString, val, { units: this.units.full })
+        .geometry.coordinates;
+      this.showMarkerAt(position);
     }
   },
   mounted() {
@@ -210,7 +185,22 @@ export default {
     },
     onMapClick(e) {
       this.coordinates.push([e.latlng.lat, e.latlng.lng]);
-      this.showMarkerAt(this.coordinates[this.coordinates.length - 1]);
+      this.highlightIndex(this.coordinates.length - 1);
+    },
+    distanceAtIndex(index) {
+      let distAcc = 0.0;
+      let lastCoords = this.coordinates[0];
+      let i;
+      for (i = 1; i <= index; i++) {
+        distAcc += turf.distance(lastCoords, this.coordinates[i], {
+          units: this.units.full
+        });
+        lastCoords = this.coordinates[i];
+      }
+      return distAcc;
+    },
+    highlightIndex(index) {
+      this.currentDistance = this.distanceAtIndex(index);
     },
     hideMarker() {
       if (this.marker !== null) {
@@ -225,8 +215,7 @@ export default {
         fillOpacity: 0.2,
         radius: 20
       }).addTo(this.map);
-      console.log(this.map.getZoom());
-      if (this.map.getZoom() <= 14) {
+      if (this.map.getZoom() <= 14 || !this.map.getBounds().contains(latLng)) {
         this.map.setView(latLng, 16);
       }
     }
